@@ -1,30 +1,38 @@
-// server.js (Node.js)
 const express = require('express');
-const bodyParser = require('body-parser');
 const app = express();
-const port = 3000;
 
-app.use(bodyParser.json());
-app.use(express.static('public')); // 정적 파일 제공
+app.use(express.json());
 
-// 로그인 처리
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  if (username === 'testuser' && password === '1234') {
-    res.status(200).send('Login successful!');
-  } else {
-    res.status(401).send('Invalid credentials!');
-  }
-});
+// 간단한 메모리 기반 유저 데이터 저장소 (데이터베이스 대신 사용)
+const users = [];
 
 // 회원가입 처리
-app.post('/signup', (req, res) => {
+app.post('/api/signup', (req, res) => {
   const { username, password } = req.body;
-  
-  res.status(200).send('Signup successful!');
+
+  // 닉네임 중복 체크
+  const userExists = users.some(user => user.username === username);
+  if (userExists) {
+    return res.status(409).send('Username already exists!');
+  }
+
+  // 새로운 유저 추가
+  users.push({ username, password });
+  return res.status(200).send('Signup successful!');
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+// 로그인 처리
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  // 유저가 존재하는지 체크
+  const user = users.find(user => user.username === username && user.password === password);
+  if (!user) {
+    return res.status(401).send('Invalid username or password!');
+  }
+
+  // 로그인 성공
+  return res.status(200).send('Login successful!');
 });
+
+module.exports = app;

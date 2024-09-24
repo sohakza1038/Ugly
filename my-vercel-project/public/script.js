@@ -9,9 +9,15 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   })
-  .then(response => response.text())
+  .then(response => {
+    if (response.ok) {
+      return response.text();
+    } else {
+      throw new Error('Invalid credentials!');
+    }
+  })
   .then(data => showMessage(data, 'success'))
-  .catch(() => showMessage('Login failed!', 'error'));
+  .catch(error => showMessage(error.message, 'error'));
 });
 
 document.getElementById('signupForm').addEventListener('submit', function(e) {
@@ -25,9 +31,17 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   })
-  .then(response => response.text())
-  .then(data => showMessage('Signup successful!', 'success'))
-  .catch(() => showMessage('Signup failed!', 'error'));
+  .then(response => {
+    if (response.ok) {
+      return response.text();
+    } else if (response.status === 409) {
+      throw new Error('Username already exists!');
+    } else {
+      throw new Error('Signup failed!');
+    }
+  })
+  .then(data => showMessage(data, 'success'))
+  .catch(error => showMessage(error.message, 'error'));
 });
 
 function showMessage(message, type) {
@@ -38,5 +52,5 @@ function showMessage(message, type) {
 
   setTimeout(() => {
     messageBox.classList.add('hidden');
-  }, 3000);
+  }, 3000); // 3초 후 메시지 숨김
 }
